@@ -25,7 +25,7 @@ public interface Trie<T> {
      *            The value that need to be stored.
      * @throws KeyAlreadyPresentException
      */
-    public void insert(T value) throws KeyAlreadyPresentException;
+    public void insert(T value);
     
     
     /**
@@ -35,14 +35,7 @@ public interface Trie<T> {
      *            The collection of values to be stored
      * @throws KeyAlreadyPresentException
      */
-    public void insertAll(List<T> value) throws KeyAlreadyPresentException;
-    
-    /**
-     * Delete a key and its associated value from the tree.
-     * @param key The key of the node that need to be deleted
-     * @return
-     */
-    public boolean delete(T key);
+    public void insertAll(List<T> value);
     
     /**
      * Search for all the keys that start with given prefix.

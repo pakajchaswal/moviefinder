@@ -2,6 +2,8 @@ package com.moviefinder.service;
 
 import java.util.Set;
 
+import com.moviefinder.model.MovieData;
+
 /**
  * Basic interface that exposes functionality of loading the provided data,
  * and then run find function of that data.
@@ -26,6 +28,13 @@ public interface FinderService<E> {
 	 * @param e
 	 * @return
 	 */
-	public Set<E> getData(E e);
+	public Set<E> getSuggestions(E e);
+	
+	/**
+	 * Returns the movie data matching the key
+	 * @param e
+	 * @return
+	 */
+	public MovieData getMovieData(E e);
 	
 }

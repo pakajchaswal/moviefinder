@@ -1,9 +1,10 @@
-<!DOCTYPE HTML>
-<html xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title th:text="${title}"></title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title th:text="MovieFinder"></title>
 
   <!-- JQuery -->
   <script type="text/javascript" th:src="@{/js/jquery-3.2.0.min.js}"></script>
@@ -11,9 +12,13 @@
   <script type="text/javascript" th:src="@{/js/jquery.autocomplete.js}"></script>
   <!-- Compiled and minified JavaScript -->
   <script type="text/javascript" th:src="@{/js/materialize.min.js}"></script>
+  <script type="text/javascript" th:src="@{/js/jquery.jqgrid.min.js}"></script>
+  <script type="text/javascript" th:src="@{/js/jquery-ui-1.8.16.custom.min.js}"></script>
 
   <!--Import materialize.css-->
   <link type="text/css" rel="stylesheet" th:href="@{/css/materialize.min.css}" media="screen,projection"/>
+  <link type="text/css" rel="stylesheet" th:href="@{/css/ui.jqgrid.min.css}" media="screen,projection"/>
+  <link type="text/css" rel="stylesheet" th:href="@{/css/jquery-ui-min.css}" media="screen,projection"/>
   <!--Import Google Icon Font-->
   <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
@@ -22,15 +27,53 @@
 
 
     $(document).ready(function() {
-
+		var movieToSearch;
       $('#autocomplete-input').devbridgeAutocomplete({
           serviceUrl: '/moviefinder/suggestion',
           paramName: 'key',
           minChars: 1,
           autoSelectFirst: true,
           delay: 200,
+          noCache: true,
+          deferRequestBy: 200, //200ms
+          showNoSuggestionNotice: true,
+       	  noSuggestionNotice: 'Sorry, no matching results',
+       	  onSearchStart: function(params){
+       	  	$("#gridWrapper").hide();
+       	  },
+          onSelect: function(suggestion){
+          	movieToSearch = suggestion;
+          	$("#jqGrid").jqGrid('GridUnload'); 
+       		$("#jqGrid").jqGrid({
+			    url: '/moviefinder/movie?key='+movieToSearch.value,
+			    datatype: 'json',
+				mtype: 'GET',
+			   	colNames: ['ID', 'Title ID', 'Ordering', 'Title', 'Region', 'Language', 'Types', 'Attributes', 'Is original title'],
+			   	colModel:[
+			   		{name:'id',index:'id', width:40},
+			   		{name:'titleId',index:'titleId', width:80},
+			   		{name:'ordering',index:'ordering', width:100},
+			   		{name:'title',index:'title', width:400},
+			   		{name:'region',index:'region', width:80},
+			   		{name:'language',index:'language', width:90},
+			   		{name:'types',index:'types', width:50},
+			   		{name:'attributes',index:'attributes', width:100},
+			   		{name:'isOriginalTitle',index:'isOriginalTitle', width:120},
+			   	],
+			   	viewrecords: true,
+			    caption:"Movies",
+			    emptyrecords: "Empty records",
+			    loadonce: false,
+			    loadComplete: function() {},
+			    jsonReader : {
+			        root: "row",
+			        id: "id",
+			        repeatitems: false
+			    }
+			});
+			$("#gridWrapper").show();
+           }
       });
-
     });
 
 
@@ -44,12 +87,15 @@
     <div class="row">
       <div class="input-field col s12">
         <i class="material-icons prefix">textsms</i>
-        <input type="text" id="autocomplete-input" class="autocomplete">
+        <input type="text" id="autocomplete-input" style="position: absolute; z-index: 2; background: transparent;"/>
         <label for="autocomplete-input">Type to search a movie</label>
       </div>
     </div>
   </div>
 </div>
+	<div id='gridWrapper' style='position:absolute; top:100px; left:50px; background:blue'>
+		<table id="jqGrid"> </table>
+	</div>
 
 
 </body>

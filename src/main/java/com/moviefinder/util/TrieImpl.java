@@ -14,8 +14,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
-import com.moviefinder.exception.KeyAlreadyPresentException;
-
 /**
  * Trie implementation of String. For searching a String from the bunch of strings stored in 
  * trie tree.
@@ -49,7 +47,7 @@ public final class TrieImpl implements Trie<String>{
 	 * Method that inserts multiple String values in the trie
 	 */
 	@Override
-	public void insertAll(List<String> values) throws KeyAlreadyPresentException{
+	public void insertAll(List<String> values){
 		for (String value : values) {
 			insert(value);
 		}
@@ -60,20 +58,14 @@ public final class TrieImpl implements Trie<String>{
 	 * @throws UnsupportedEncodingException 
 	 */
 	@Override
-	public void insert(String value) throws KeyAlreadyPresentException{
+	public void insert(String value){
 	    //value = new String(value.getBytes("UTF-8"), "UTF-8");
 		if(Objects.isNull(value) || value.isEmpty()) {
 			throw new IllegalArgumentException("Invalid value");
 		}
-		//StringUtils.stripAccents(value).toLowerCase();
 		insert(value, value);
 	}
 
-	@Override
-	public boolean delete(String key) {
-		// TODO Auto-generated method stub
-		return false;
-	}
 	
 	@Override
 	public void clear() {
@@ -140,25 +132,21 @@ public final class TrieImpl implements Trie<String>{
 	 * @param value
 	 */
 	private void insert(String key, String value) {
-		//if(!search(key).isEmpty()) {
-			//throw new KeyAlreadyPresentException("String "+key+" already exists in the trie");
-		//}
 		TrieNode<String> currentNode = root;
-
 		for (int i = 0; i < key.length(); ++i) {
-			Character letter = key.charAt(i);
+			Character letter = Character.toLowerCase(key.charAt(i));
 			if (currentNode.childs.get(letter) == null) {
+				currentNode.key = value.substring(0, i);
+				if(letter.equals(' ')) {
+					currentNode.wordEnds = true;
+				}
 				currentNode.childs.put(letter, new TrieNode<String>(letter, currentNode));
 			}
 
 			currentNode = currentNode.childs.get(letter);
 		}
-		currentNode.wordEnds = true;
+		currentNode.sentenceEnds = true;
 		currentNode.key = value;
-	}
-
-	private void keepHistoryOfMatchingStrings(List<TrieNode<String>> matchingNodes, TrieNode<String> node) {
-		matchingNodes.addAll(node.childs.values());
 	}
 
 	/**
@@ -166,23 +154,18 @@ public final class TrieImpl implements Trie<String>{
 	 * @param character
 	 * @param node
 	 */
-	private void checkNode(Character character, TrieNode<String> node) {
+	private void checkNode(Character character, TrieNode<String> node, String key) {
 		List<TrieNode<String>> children = new ArrayList<>();
-		List<TrieNode<String>> matchingNodes = new ArrayList<>();
 		children.addAll(node.childs.values());
 		TrieNode<String> presentNode = (TrieNode<String>)node.childs.get(character);
 		if (presentNode != null) {
-			matchingNodes.clear();
-			keepHistoryOfMatchingStrings(matchingNodes, presentNode);
-			nodesFound.add(presentNode);
-			children.remove(presentNode);
+			if(Objects.nonNull(presentNode.key)){
+				nodesFound.add(presentNode);
+				children.remove(presentNode);
+			}
 		}
-
 		for (TrieNode<String> child : children) {
-			checkNode(character, child);
-		}
-		if (!matchingNodes.isEmpty()) {
-			nodesFound.addAll(matchingNodes);
+			checkNode(character, child, key);
 		}
 	}
 
@@ -199,7 +182,6 @@ public final class TrieImpl implements Trie<String>{
 			foundNodes.add(root.key);
 			return foundNodes;
 		}
-		//key = StringUtils.stripAccents(key).toLowerCase();
 		nodesFound.clear();
 		nodesFound.add(root);
 		int length = key.length();
@@ -211,7 +193,7 @@ public final class TrieImpl implements Trie<String>{
 			currentNodes.addAll(nodesFound);
 			nodesFound.clear();
 			for (TrieNode<String> node : currentNodes) {
-				checkNode(key.charAt(i), node);
+				checkNode(Character.toLowerCase(key.charAt(i)), node, key);
 			}
 		}
 		/*
@@ -219,14 +201,23 @@ public final class TrieImpl implements Trie<String>{
 		 */
 		for (TrieNode<String> node : nodesFound) {
 			for (TrieNode<String> leaf : node.getChildrens()) {
-				foundNodes.add((String) leaf.key);
+				String keySubstring = null;
+				if(key.length()>2) {
+					keySubstring = key.substring(0, key.length()-2);
+				}else {
+					keySubstring = key;
+				}
+				if(leaf.key.toLowerCase().startsWith(keySubstring.toLowerCase())) {
+					foundNodes.add((String) leaf.key);
+				}else if(leaf.key.toLowerCase().contains(key.toLowerCase())) {
+					foundNodes.add((String) leaf.key);
+				}
 			}
 		}
 		return foundNodes;
 	}
 	
 	protected TrieNode<String> findNode(String key) {
-		//key = StringUtils.stripAccents(key).toLowerCase();
         TrieNode<String> node = root;
         int len = key.length();
         for (int i = 0; i < len; i++) {
@@ -239,39 +230,6 @@ public final class TrieImpl implements Trie<String>{
         return node;
     }
 	
-	
-	public static void main(String[] args) throws KeyAlreadyPresentException, UnsupportedEncodingException {
-		TrieImpl trie = new TrieImpl();
-		/*trie.insert("Pankaj");
-		trie.insert("JakPank");
-		trie.insert("RaPark");
-		trie.insert("PACk");*/
-		/*trie.insert("Raj");*/
-		trie.insert("Raje");
-		trie.insert("Raja");
-		trie.insert("Rajdeep");
-		trie.insert("Rajhans");
-		trie.insert("Rajasthan");
-		trie.insert("Chaswal");
-		trie.insert("Карменсита");
-		trie.insert("Carmencita - spanyol tánc");
-		/*System.out.println(trie.search("pank"));
-		System.out.println(trie.search("Parkaj"));
-		System.out.println(trie.search("ank"));
-		
-		System.out.println(trie.search("asw"));
-		System.out.println(trie.search("сит"));
-		System.out.println(trie.search("Карм"));
-		System.out.println(trie.search("c"));*/
-		//System.out.println(trie.search("Carmencita - etyspanyol tánc"));
-		System.out.println(trie.search("aj"));
-		/*System.out.println(trie.search("Raje"));
-		System.out.println(trie.prefixSearch("Raj"));
-		System.out.println(trie.prefixSearch("aj"));*/
-		trie.printTrie();
-		// trie.find("xb");
-	}
-
 	public void printTrie() {
 		printTrie(new Formatter(System.out), 0, root);
 	}
@@ -329,20 +287,22 @@ public final class TrieImpl implements Trie<String>{
 		protected Map<Character, TrieNode<T>> childs = new HashMap<>();
 		protected int id;
 		protected boolean wordEnds;
+		protected boolean sentenceEnds;
 		protected String key;
 		protected Character character;
 		protected TrieNode<T> parent;
 
 		public TrieNode(Character letter, TrieNode<T> parent) {
-			id++;
-			wordEnds = false;
+			this.id++;
+			this.wordEnds = false;
+			this.sentenceEnds = false;
 			this.character = letter;
 			this.parent = parent;
 		}
 
 		public List<TrieNode<T>> getChildrens() {
 			List<TrieNode<T>> tmpList = new ArrayList<>();
-			if (wordEnds) {
+			if (sentenceEnds) {
 				tmpList.add(this);
 				if(this.childs.isEmpty())
 				return tmpList;
@@ -376,7 +336,7 @@ public final class TrieImpl implements Trie<String>{
         public TrieIterator(TrieNode<String> node, String prefix) {
             sb.append(prefix);
             q.push(node.childs.entrySet().iterator());
-            if (node.wordEnds) {
+            if (node.sentenceEnds) {
                 next = prefix;
             } else {
                 findNext();
@@ -394,7 +354,7 @@ public final class TrieImpl implements Trie<String>{
                     TrieNode<String> node = e.getValue();
                     iterator = node.childs.entrySet().iterator();
                     q.push(iterator);
-                    if (node.wordEnds) {
+                    if (node.sentenceEnds) {
                         next = sb.toString();
                         return;
                     }
@@ -421,6 +381,5 @@ public final class TrieImpl implements Trie<String>{
         }
 
     }
-
-
+    
 }

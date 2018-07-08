@@ -27,7 +27,7 @@ public class MovieService implements FinderService<String> {
 	@Inject
 	private ResourceLoader resourceLoader;
 
-	public Set<String> getData(String key) {
+	public Set<String> getSuggestions(String key) {
 		TrieImpl trie = TrieImpl.getInstance();
 		return trie.search(key);
 	}
@@ -63,17 +63,28 @@ public class MovieService implements FinderService<String> {
 							.types(types).attributes(attributes).isOriginalTitle(isOriginalTitle).build();
 					if(!movieDataCache.contains(title)){
 						trie.insert(title);
-						movieDataCache.put(title, movieData);
+						movieDataCache.put(title.toLowerCase(), movieData);
 					}
 				} else {
 					i++;
 				}
+				
+				
+				//trie.printTrie();
+
 			}
 			logger.info(":: Completed loading movie data ::");
 			//trie.printTrie();
 		} catch (Throwable t) {
-			logger.error(t.getMessage());
+			t.printStackTrace();
+			logger.error(t.getMessage(), t.getCause());
 		} 
+	}
+
+	@Override
+	public MovieData getMovieData(String key) {
+		MovieDataCache movieDataCache = MovieDataCache.getInstance();
+		return movieDataCache.get(key);
 	}
 
 }
